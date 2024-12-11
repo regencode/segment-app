@@ -36,8 +36,8 @@ class SegmentApp:
 
     
     def display_objects(self):
-        self.gui.display_title()
-        self.gui.display_button()
+        self.gui.show_title()
+        self.gui.show_objects()
 
     def run(self):
         # infinite event loop

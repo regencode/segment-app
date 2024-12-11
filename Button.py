@@ -3,8 +3,8 @@ from Font import Font
 from Display import Display
 
 class Button(Display):
-    def __init__(self, app, text, position, size, callback):
-        super().__init__(app, text, position, size)
+    def __init__(self, app, position, size, callback, text=""):
+        super().__init__(app, position, size, text)
         self.callback = callback
 
     def collidepoint(self, mouse_pos):
