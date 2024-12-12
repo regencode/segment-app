@@ -3,6 +3,7 @@ import cv2 as cv
 from Settings import Settings
 from GUI import GUI
 
+# Main code, only for forever loop and checking events
 
 class SegmentApp:
 
@@ -35,9 +36,8 @@ class SegmentApp:
                 self.gui.register_click(mouse_pos)
 
     
-    def display_objects(self):
-        self.gui.show_title()
-        self.gui.show_objects()
+    def display_gui(self):
+        self.gui.show()
 
     def run(self):
         # infinite event loop
@@ -46,7 +46,8 @@ class SegmentApp:
             self.screen.fill("Gray")
 
             self.check_events() # Check for events such as user inputs
-            self.display_objects()
+            self.display_gui()
+            self.gui.fetch_state()
 
             pygame.display.flip()
 
