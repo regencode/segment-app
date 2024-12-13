@@ -1,5 +1,6 @@
 import pygame
 from Font import Font
+import numpy as np
 
 class Display:
     def __init__(self, app, position, size, text="", top_text="", font_size=20, display_array=None):
@@ -22,9 +23,11 @@ class Display:
         self.display_content = None
         self.display_content_rect = None
         if display_array is not None:
-            self.display_content = pygame.surfarray.make_surface(display_array)
-            self.display_content_rect = self.display_content.get_rect(center=self.rect.center)
+            self.update_display(display_array)
 
+    def update_display(self, display_array : np.array):
+        self.display_content = pygame.surfarray.make_surface(display_array)
+        self.display_content_rect = self.display_content.get_rect(center=self.rect.center)
 
     def blit(self):
         pygame.draw.rect(self.screen, self.color, self.rect) 

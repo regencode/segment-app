@@ -1,9 +1,18 @@
 import pygame
+import os
+import re
+import cv2 as cv
 from Button import Button
 from Display import Display
 from Font import Font
 from Icon import Icon
 from Popup import Popup
+
+
+from utils.Watershed import watershed
+from utils.KMeans import kmeans
+from utils.UNet import UNetRunner
+from utils.DeepLab import DeepLabRunner
 
 import numpy as np
 
@@ -24,27 +33,73 @@ class GUI:
         self.center_y = self.height//2
         self.buttons = None
         self.displays = None
+
+        self.unet = UNetRunner('cpu')
+        self.deeplab = DeepLabRunner('cpu')
         
-        self.numpy_random = np.random.randint(0, 255, (255, 255, 3))
+        self.numpy_random = np.random.randint(0, 255, (256, 256, 3))
+        self.input_folder = "TCGA_CS_4941_19960909"
+        self.input_paths = []
+        self.input_list_index = 0
+
+        self.load_inputs_from_folder()
+        self.input = cv.imread(self.input_paths[self.input_list_index])
+        self.output = None
+
+        self.input_display = Display(self.app, position=(self.center_x//2, self.center_y-50), size=(300, 300), text="Input", top_text=True, display_array=self.input)
+
+        self.output_display = Display(self.app, position=(self.center_x//2+self.center_x, self.center_y-50), size=(300, 300), text="Output", top_text=True)
 
         self.mode_selection_popup = Popup(self.app, position=(self.center_x, self.center_y+20), size=(800, 600), title="Methods:")
 
-        self.init_objects()
     
         self.segment_state = 0 
         # 0 -> Watershed
         # 1 -> K-means
         # 2 -> U-net
         # 3 -> DeepLabV3+
+
+        self.init_objects()
+
+    
+
+    def next_image(self):
+        if self.input_list_index < len(self.input_paths) - 1:
+            self.input_list_index += 1
+
+            self.input = cv.imread(self.input_paths[self.input_list_index])
+            self.input_display.update_display(self.input)
+
+    def last_image(self):
+        if self.input_list_index > 0:
+            self.input_list_index -= 1
+            self.input = cv.imread(self.input_paths[self.input_list_index])
+            self.input_display.update_display(self.input)
+
+    def load_inputs_from_folder(self):
+        for idx, file_path in enumerate(os.listdir(self.input_folder)):
+            if not re.match(".*_mask\.tif$", file_path):
+                full_path = self.input_folder + "/" + file_path
+                self.input_paths.append(full_path)
+
+    def segment_input(self):
+        if self.segment_state == 0:
+            self.output = watershed(self.input, )
+        elif self.segment_state == 1:
+            self.output = kmeans(self.input,)
+        elif self.segment_state == 2:
+            self.output = self.unet.forward(self.input)
+        elif self.segment_state == 3:
+            self.output = self.deeplab.forward(self.input)
+        # self.output should be numpy array
+        self.output_display.update_display(self.output)  # update output display to show segmented image
     
     def init_objects(self):
         self.buttons = [
-            Button(self.app, position=(self.center_x, self.center_y+250), size=(180, 80), callback=None, text="Segment"),
+            Button(self.app, position=(self.center_x//2+180, self.center_y-50), size=(50, 50), text=">", callback=self.next_image),
+            Button(self.app, position=(self.center_x//2-180, self.center_y-50), size=(50, 50), text="<", callback=self.last_image),
+            Button(self.app, position=(self.center_x, self.center_y+250), size=(180, 80), callback=self.segment_input, text="Segment"),
             Button(self.app, position=(self.center_x, self.center_y+160), size=(180, 80), callback=self.mode_selection_popup.toggle_visible, text="Method selection")
-        ]
-        self.displays = [
-            Display(self.app, position=(self.center_x//2, self.center_y-50), size=(300, 300), text="Input", top_text=True, display_array=self.numpy_random),
-            Display(self.app, position=(self.center_x//2+self.center_x, self.center_y-50), size=(300, 300), text="Output", top_text=True),
         ]
         self.icons = [
             Icon(self.app, "resources/right-arrow.png", position=(self.center_x, self.center_y-50))
@@ -88,9 +143,9 @@ class GUI:
     def show_objects(self):
         for button in self.buttons:
             button.blit()
-        for display in self.displays:
-            display.blit()
-    
+        self.input_display.blit()
+        self.output_display.blit()
+
     def show_icons(self):
         for icon in self.icons:
             icon.blit()
