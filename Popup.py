@@ -48,10 +48,10 @@ class Popup:
     
     def init_objects(self):
         self.buttons = [
-            Button(self.app, (self.posX, self.posY-200), size=(300, 90), text="Watershed Segmentation", callback=self.update_state, callback_input=0), 
-            Button(self.app, (self.posX, self.posY-100), size=(300, 90), text="K-Means Segmentation", callback=self.update_state, callback_input=1), 
-            Button(self.app, (self.posX, self.posY), size=(300, 90), text="U-Net Segmentation", callback=self.update_state, callback_input=2), 
-            Button(self.app, (self.posX, self.posY+100), size=(300, 90), text="DeepLabV3+ Segmentation", callback=self.update_state, callback_input=3), 
+            Button(self.app, (self.posX, self.posY-200), size=(300, 90), text="Watershed Segmentation", callback=self.update_state, callback_input=0, use_notif=True, notif_text="Selected Watershed method"), 
+            Button(self.app, (self.posX, self.posY-100), size=(300, 90), text="Region Growing Segmentation", callback=self.update_state, callback_input=1, use_notif=True, notif_text="Selected Region-growing method"), 
+            Button(self.app, (self.posX, self.posY), size=(300, 90), text="U-Net Segmentation", callback=self.update_state, callback_input=2, use_notif=True, notif_text="Selected U-Net method"), 
+            Button(self.app, (self.posX, self.posY+100), size=(300, 90), text="DeepLabV3+ Segmentation", callback=self.update_state, callback_input=3, use_notif=True, notif_text="Selected DeepLabV3+ method"), 
 
             Button(self.app, (self.posX, self.posY+260), size=(200, 40), text="Back", callback=self.toggle_visible, font_size=15), 
         ]
@@ -66,4 +66,6 @@ class Popup:
     def show_buttons(self):
         for button in self.buttons:
             button.blit()
+            if button.use_notif:
+                button.notification.blit()
     

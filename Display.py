@@ -26,6 +26,10 @@ class Display:
             self.update_display(display_array)
 
     def update_display(self, display_array : np.array):
+        if len(display_array.shape) == 3:
+            display_array = np.transpose(display_array, axes=(1, 0, 2))
+        else:
+            display_array = np.transpose(display_array, axes=(1, 0))
         self.display_content = pygame.surfarray.make_surface(display_array)
         self.display_content_rect = self.display_content.get_rect(center=self.rect.center)
 

@@ -7,10 +7,11 @@ from Display import Display
 from Font import Font
 from Icon import Icon
 from Popup import Popup
+from Notification import Notification
 
 
 from utils.Watershed import watershed
-from utils.KMeans import kmeans
+from utils.RegionGrowing import region_growing
 from utils.UNet import UNetRunner
 from utils.DeepLab import DeepLabRunner
 
@@ -34,6 +35,7 @@ class GUI:
         self.buttons = None
         self.displays = None
 
+
         self.unet = UNetRunner('cpu')
         self.deeplab = DeepLabRunner('cpu')
         
@@ -55,7 +57,7 @@ class GUI:
     
         self.segment_state = 0 
         # 0 -> Watershed
-        # 1 -> K-means
+        # 1 -> Region-growing
         # 2 -> U-net
         # 3 -> DeepLabV3+
 
@@ -78,15 +80,18 @@ class GUI:
 
     def load_inputs_from_folder(self):
         for idx, file_path in enumerate(os.listdir(self.input_folder)):
-            if not re.match(".*_mask\.tif$", file_path):
+            if not re.match(".*_mask.tif$", file_path):
                 full_path = self.input_folder + "/" + file_path
                 self.input_paths.append(full_path)
+    
+    def save_output(self):
+        cv.imwrite("results/output.png", self.output)
 
     def segment_input(self):
         if self.segment_state == 0:
-            self.output = watershed(self.input, )
+            self.output = watershed(self.input)
         elif self.segment_state == 1:
-            self.output = kmeans(self.input,)
+            self.output = region_growing(self.input, tolerance=50)
         elif self.segment_state == 2:
             self.output = self.unet.forward(self.input)
         elif self.segment_state == 3:
@@ -98,7 +103,8 @@ class GUI:
         self.buttons = [
             Button(self.app, position=(self.center_x//2+180, self.center_y-50), size=(50, 50), text=">", callback=self.next_image),
             Button(self.app, position=(self.center_x//2-180, self.center_y-50), size=(50, 50), text="<", callback=self.last_image),
-            Button(self.app, position=(self.center_x, self.center_y+250), size=(180, 80), callback=self.segment_input, text="Segment"),
+            Button(self.app, position=(self.center_x//2+self.center_x+180, self.center_y-50), size=(50, 50), text="Save", callback=self.save_output, use_notif=True, notif_text="output.png saved in results folder"),
+            Button(self.app, position=(self.center_x, self.center_y+250), size=(180, 80), callback=self.segment_input, text="Segment", use_notif=True, notif_text="Tumor Segmentation complete"),
             Button(self.app, position=(self.center_x, self.center_y+160), size=(180, 80), callback=self.mode_selection_popup.toggle_visible, text="Method selection")
         ]
         self.icons = [
@@ -119,7 +125,7 @@ class GUI:
         if self.segment_state == 0:
             return "Watershed segmentation"
         elif self.segment_state == 1:
-            return "K-Means segmentation"
+            return "Region-growing segmentation"
         elif self.segment_state == 2:
             return "U-Net segmentation"
         elif self.segment_state == 3:
@@ -143,6 +149,8 @@ class GUI:
     def show_objects(self):
         for button in self.buttons:
             button.blit()
+            if button.use_notif:
+                button.notification.blit()
         self.input_display.blit()
         self.output_display.blit()
 
