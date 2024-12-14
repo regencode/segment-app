@@ -50,7 +50,7 @@ def region_growing(image, tolerance=50):
     cv.destroyAllWindows()
     # assuming numpy format
 
-    image = np.astype(image, np.int32) # prevent overflow when operation results in negative
+    image = np.int32(image) # prevent overflow when operation results in negative
     for x in range(input.shape[0]):
         for y in range(input.shape[1]):
             if input[x][y] > 0 and vis[x][y] == 0: # marked by user but not yet added
